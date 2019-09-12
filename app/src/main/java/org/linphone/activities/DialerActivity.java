@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import android.Manifest;
 import android.content.Intent;
+import android.hardware.usb.UsbDevice;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.TextureView;
@@ -28,6 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.asynclayoutinflater.view.AsyncLayoutInflater;
@@ -35,6 +37,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import me.aflak.arduino.Arduino;
+import me.aflak.arduino.ArduinoListener;
 import org.linphone.LinphoneManager;
 import org.linphone.R;
 import org.linphone.contacts.ContactsActivity;
@@ -60,6 +64,31 @@ public class DialerActivity extends MainActivity implements AddressText.AddressC
     private CoreListenerStub mListener;
     private boolean mInterfaceLoaded;
     private String mAddressToCallOnLayoutReady;
+
+    private Arduino arduino;
+    private String recvmsg = "";
+    int num = 0;
+
+    public void display(final String message) {
+        runOnUiThread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(DialerActivity.this, message, Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    public void phonecall() {
+        runOnUiThread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        mAddress.setText("853");
+                        mStartCall.performClick();
+                    }
+                });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +148,48 @@ public class DialerActivity extends MainActivity implements AddressText.AddressC
                 };
 
         handleIntentParams(getIntent());
+        arduino = new Arduino(DialerActivity.this);
+        arduino.setArduinoListener(
+                new ArduinoListener() {
+                    @Override
+                    public void onArduinoAttached(UsbDevice device) {
+                        Toast.makeText(getBaseContext(), "open", Toast.LENGTH_SHORT).show();
+                        arduino.open(device);
+                    }
+
+                    @Override
+                    public void onArduinoDetached() {
+                        // arduino detached from phone
+                    }
+
+                    @Override
+                    public void onArduinoMessage(byte[] bytes) {
+                        String buffer = new String(bytes);
+                        recvmsg += buffer;
+                        if (buffer.contains("\r")) {
+                            recvmsg = recvmsg.replaceAll("\n", "").replaceAll("\r", "");
+                            // do things here
+                            phonecall();
+                            display(recvmsg);
+
+                            // reset recv
+                            recvmsg = "";
+                        }
+                    }
+
+                    @Override
+                    public void onArduinoOpened() {
+                        // you can start the communication
+                        String str = "123";
+                        arduino.send(str.getBytes());
+                    }
+
+                    @Override
+                    public void onUsbPermissionDenied() {
+                        // Permission denied, display popup then
+                        arduino.reopen();
+                    }
+                });
     }
 
     @Override
@@ -168,6 +239,8 @@ public class DialerActivity extends MainActivity implements AddressText.AddressC
         if (mListener != null) mListener = null;
 
         super.onDestroy();
+        arduino.unsetArduinoListener();
+        arduino.close();
     }
 
     private void initUI(View view) {

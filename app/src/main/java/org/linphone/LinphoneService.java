@@ -107,9 +107,7 @@ public final class LinphoneService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
         setupActivityMonitor();
-
         // Needed in order for the two next calls to succeed, libraries must have been loaded first
         LinphonePreferences.instance().setContext(this);
         Factory.instance().setLogCollectionPath(getFilesDir().getAbsolutePath());
@@ -119,6 +117,7 @@ public final class LinphoneService extends Service {
         if (LinphonePreferences.instance().useJavaLogger()) {
             Factory.instance().getLoggingService().addListener(mJavaLoggingService);
         }
+        //        Log.i("debug test");
 
         // Dump some debugging information to the logs
         Log.i(START_LINPHONE_LOGS);

@@ -50,6 +50,8 @@
     <!-- Needed for full screen intent in notifications -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
+    <uses-permission android:name="com.google.android.things.permission.USE_PERIPHERAL_IO" />
+
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
@@ -58,7 +60,7 @@
         android:xlargeScreens="true" />
 
     <application
-        android:allowBackup="false"
+        android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
@@ -122,7 +124,7 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
-
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.OPENABLE" />
 
@@ -140,6 +142,7 @@
 
                 <data android:mimeType="image/*" />
             </intent-filter>
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"  android:resource="@xml/device_filter" />
         </activity>
 
         <activity

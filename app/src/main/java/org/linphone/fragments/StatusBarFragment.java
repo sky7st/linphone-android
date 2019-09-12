@@ -45,6 +45,10 @@ public class StatusBarFragment extends Fragment {
     private CoreListenerStub mListener;
     private MenuClikedListener mMenuListener;
 
+    public void setmStatusText(String msg) {
+        mStatusText.setText(msg);
+    }
+
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
